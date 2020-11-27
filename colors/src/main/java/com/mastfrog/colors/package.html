@@ -1,0 +1,67 @@
+<html>
+    <head>
+        <title>Gradients and Color Transforms API</title>
+    </head>
+    <body>
+        <h1>Gradients and Color Transforms API</h1>
+        <p>
+            This library serves two functions:
+        </p>
+        <ul>
+            <li>Performing complex transforms on colors, so a small palette of
+                colors can be used to derive a complete UI toolkit's worth of colors
+                that are guaranteed to contrast enough to work and be aesthetically
+                acceptable</li>
+            <li>Providing high-performance implementations of radial and linear
+                gradient painting and caching for non-linear gradient painting</li>
+        </ul>
+        <h2>Gradients</h2>
+        <p>
+            The JDK's <code>GradientPaint</code> and 
+            <code>LinearGradientPaint</code> both allocate huge rasters in order
+            to do their work, frequently resulting in merely painting generating
+            a huge amount of garbage and performing badly.  For linear gradient
+            paints, you are either painting a gradient along the X axis or Y
+            axis, and you can allocate an image that is even one pixel on the
+            non-gradient axis and blit that to reproduce the gradient identically,
+            no matter the requested X and Y coordinates or non-gradient-axis
+            size.  
+        </p>
+        <p>
+            Radial gradients are a similar case - what you actually need is
+            an image of 1/4 of the gradient painted rotated and translated
+            four times.
+        </p>
+        <p>
+            While there are no such optimizations readily available for non-linear
+            gradients, most uses of them paint similarly sized gradients (say,
+            buttons in a Swing look and feel), and can benefit from caching
+            a few instances (using a small LRU cache).
+        </p>
+        <p>
+            <a href="GradientPainter.html"><code>GradientPainter</code></a> 
+            can be obtained from the <a href="Gradients.html"><code>Gradients</code></a>
+            factory class, and handle painting of linear gradients as described.
+        </p>
+        <h2>Colors</h2>
+        <p>
+            One of the problems in creating custom Swing or other UI components
+            is the number of colors you need to map - desiging something with
+            customizations for all possible look and feel and theme implementations
+            is an impossibility.  A better approach is to take the colors that
+            are related to the component you are building (at worst, the UIManager <code>control</code>
+            and <code>controlText</code> keys) and whatever other focus colors you
+            need, and <i>derive</i> colors that will contrast and fit with the
+            theme, no matter what it is.
+        </p>
+        <p>
+            The <a href="Colors.html"><code>Colors</code></a> and 
+            ColorSupplier class allow you to do this, using a subtype of a
+            simple <code>Supplier&lt;Color&gt;</code> which has default
+            methods that allow you to combine colors, adjust hue, saturation
+            and brightness, find the midpoint between colors, or take one
+            color and transform it using the hue, saturation or brightness of
+            another, and more.
+        </p>
+    </body>
+</html>

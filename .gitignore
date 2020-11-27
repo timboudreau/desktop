@@ -1,0 +1,20 @@
+*.class
+
+# Package Files #
+*.jar
+*.war
+*.ear
+*.orig
+*.iml
+.idea/*
+target/*
+/nbproject/
+.idea/
+nb-configuration.xml
+
+/geometry/target
+/geometry/nbproject
+/colors/target
+/colors/nbproject
+swing-miscellaneous/target
+swing-miscellaneous/nbproject
