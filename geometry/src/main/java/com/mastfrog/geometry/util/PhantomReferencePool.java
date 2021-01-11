@@ -295,8 +295,6 @@ final class PhantomReferencePool<T> {
             } else {
                 decrementCount();
             }
-        } else {
-            System.out.println("Got from queue '" + item + "'");
         }
         if (owner != null) {
             p = newReference(item, owner, rq);
