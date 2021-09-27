@@ -92,8 +92,25 @@ public final class EqLine extends Line2D.Double implements Intersectable {
         }
         double ang = angle();
         double perp = by > 0 ? Angle.perpendicularClockwise(ang)
-                : Angle.perpendicularCounterclockwise(ang);
+                : Angle.perpendicularClockwise(-ang);
         Circle.positionOf(perp, 0, 0, Math.abs(by), this::translate);
+    }
+
+    public EqLine shiftedPerpendicularly(double by) {
+        if (by == 0) {
+            return copy();
+        }
+        double ang = angle();
+        EqLine result = copy();
+        if (by < 0) {
+            result.swap();
+        }
+        double perp = Angle.perpendicularClockwise(ang);
+        Circle.positionOf(perp, 0, 0, Math.abs(by), result::translate);
+        if (by < 0) {
+            result.swap();
+        }
+        return result;
     }
 
     /**

@@ -35,6 +35,7 @@ import java.awt.geom.Line2D;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.geom.RectangularShape;
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
 import java.util.Iterator;
@@ -80,6 +81,13 @@ public final strictfp class Circle implements Shape, Sector {
         this.centerX = centerX;
         this.centerY = centerY;
         this.radius = Math.abs(radius);
+    }
+
+    public Circle copy() {
+        Circle result = new Circle(centerX, centerY, radius);
+        result.factor = factor;
+        result.rotation = rotation;
+        return result;
     }
 
     @Override
@@ -283,6 +291,10 @@ public final strictfp class Circle implements Shape, Sector {
         return result;
     }
 
+    public static strictfp Circle fromPoints(Point2D a, Point2D b, Point2D c) {
+        return fromPoints(a.getX(), a.getY(), b.getX(), b.getY(), c.getX(), c.getY());
+    }
+
     /**
      * Create a circle in which the three passed points are all exactly on the
      * circumference.
@@ -295,21 +307,23 @@ public final strictfp class Circle implements Shape, Sector {
      * @param y3 The third y coordinate
      * @return A circle
      */
-    public static Circle fromPoints(double x1, double y1, double x2, double y2, double x3, double y3) {
-        double xDiff1to2 = x1 - x2;
-        double xDiff1to3 = x1 - x3;
+    public static strictfp Circle fromPoints(double x1, double y1, double x2, double y2, double x3, double y3) {
+        // IF we come up with an exact 0 value here, we can wind up
+        // with a circle whose radius is NaN, so introduce a small fudge-factor
+        double xDiff1to2 = nonZero(x1 - x2);
+        double xDiff1to3 = nonZero(x1 - x3);
 
-        double yDiff1to2 = y1 - y2;
-        double yDiff1to3 = y1 - y3;
+        double yDiff1to2 = nonZero(y1 - y2);
+        double yDiff1to3 = nonZero(y1 - y3);
 
-        double yDiff3to1 = y3 - y1;
-        double yDiff2to1 = y2 - y1;
+        double yDiff3to1 = nonZero(y3 - y1);
+        double yDiff2to1 = nonZero(y2 - y1);
 
-        double xDiff3to1 = x3 - x1;
-        double xDiff2to1 = x2 - x1;
+        double xDiff3to1 = nonZero(x3 - x1);
+        double xDiff2to1 = nonZero(x2 - x1);
 
-        double x1squared = x1 * x1;
-        double y1squared = y1 * y1;
+        double x1squared = nonZero(x1 * x1);
+        double y1squared = nonZero(y1 * y1);
 
         double xSquared1to3 = (x1squared
                 - Math.pow(x3, 2));
@@ -320,6 +334,7 @@ public final strictfp class Circle implements Shape, Sector {
                 - x1squared);
         double ySquared2to1 = (Math.pow(y2, 2)
                 - Math.pow(y1, 2));
+
         double vx = (xSquared1to3 * xDiff1to2
                 + ySquard1to3 * xDiff1to2
                 + xSquared2to1 * xDiff1to3
@@ -345,6 +360,20 @@ public final strictfp class Circle implements Shape, Sector {
         double r = Math.sqrt(rSquared);
         return new Circle(cx, cy, r);
 
+    }
+
+    private static final double NON_ZERO = 0.00000000000001;
+
+    private static double nonZero(double z) {
+        if (z == 0.0 || z == -0.0) {
+            return NON_ZERO;
+        }
+        return z;
+    }
+
+    public boolean isRational() {
+        return Double.isFinite(centerX) && Double.isFinite(centerY)
+                && Double.isFinite(radius);
     }
 
     public void nearestPoint(double toX, double toY, DoubleBiConsumer c) {
@@ -413,6 +442,13 @@ public final strictfp class Circle implements Shape, Sector {
         this.centerY = y + 0.0;
         return this;
     }
+
+    public Circle setCenterFrom(RectangularShape shape) {
+        this.centerX = shape.getCenterX() + 0.0; // avoid -0.0
+        this.centerY = shape.getCenterY() + 0.0;
+        return this;
+    }
+
 
     public Circle setRadius(double radius) {
         this.radius = Math.abs(radius);

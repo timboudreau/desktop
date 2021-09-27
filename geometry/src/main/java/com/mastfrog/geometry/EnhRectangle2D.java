@@ -223,6 +223,40 @@ public class EnhRectangle2D extends Rectangle2D.Double implements EnhancedShape,
         return GeometryStrings.toString(this);
     }
 
+    public EnhRectangle2D growVertically(double by) {
+        double half = by / 2;
+        y += half;
+        height -= by;
+        return this;
+    }
+
+    public EnhRectangle2D growHorizontally(double by) {
+        double half = by / 2;
+        x += half;
+        width -= by;
+        return this;
+    }
+
+    public EnhRectangle2D setBottom(double bottom) {
+        double newHeight = Math.abs(bottom - y);
+        height = newHeight;
+        return this;
+    }
+
+    public EnhRectangle2D setRight(double right) {
+        double newWidth = Math.abs(right - x);
+        width = newWidth;
+        return this;
+    }
+
+    public double bottom() {
+        return y + height;
+    }
+
+    public double right() {
+        return x + width;
+    }
+
     public EnhRectangle2D add(Shape shapeForBounds) {
         add(shapeForBounds.getBounds2D());
         return this;
