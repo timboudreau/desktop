@@ -34,6 +34,7 @@ import static java.awt.geom.PathIterator.SEG_MOVETO;
 import static java.awt.geom.PathIterator.SEG_QUADTO;
 
 /**
+ * Elements of a Shape / Path2D / PathIterator.
  *
  * @author Tim Boudreau
  */
@@ -52,6 +53,10 @@ public enum PathElementKind {
                     + " points, but point kind " + pointIndex + " requested");
         }
         return kinds[pointIndex];
+    }
+
+    public boolean canContain(PointKind pk) {
+        return pk.elementKind() == this;
     }
 
     public boolean isCurve() {
@@ -77,6 +82,32 @@ public enum PathElementKind {
     }
 
     public void apply(double[] pointData, Path2D path) {
+        if (this != CLOSE) {
+            assert pointData != null;
+            assert pointData.length >= arraySize() : "Wrong array size " + pointData.length + " for " + this;
+        }
+        switch (this) {
+            case CLOSE:
+                path.closePath();
+                break;
+            case MOVE:
+                path.moveTo(pointData[0], pointData[1]);
+                break;
+            case LINE:
+                path.lineTo(pointData[0], pointData[1]);
+                break;
+            case QUADRATIC:
+                path.quadTo(pointData[0], pointData[1], pointData[2], pointData[3]);
+                break;
+            case CUBIC:
+                path.curveTo(pointData[0], pointData[1], pointData[2], pointData[3], pointData[4], pointData[5]);
+                break;
+            default:
+                throw new AssertionError(this);
+        }
+    }
+
+    public void apply(double[] pointData, PathLike path) {
         if (this != CLOSE) {
             assert pointData != null;
             assert pointData.length >= arraySize() : "Wrong array size " + pointData.length + " for " + this;

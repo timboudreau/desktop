@@ -47,6 +47,11 @@ public final class FlyweightPathElement implements PathElement {
     }
 
     @Override
+    public PathElement copy() {
+        return new SimplePathElement(type, Arrays.copyOf(data, Math.min(data.length, 6)));
+    }
+
+    @Override
     public PathElementKind kind() {
         if (type < 0) {
             return null;

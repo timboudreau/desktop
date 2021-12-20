@@ -24,6 +24,7 @@
 package com.mastfrog.geometry.path;
 
 import com.mastfrog.function.DoubleBiConsumer;
+import com.mastfrog.geometry.Axis;
 import com.mastfrog.geometry.EqPointDouble;
 import static com.mastfrog.util.preconditions.Checks.notNull;
 import java.awt.Shape;
@@ -55,6 +56,34 @@ public interface PathElement extends Iterable<EqPointDouble> {
      * @return An array
      */
     double[] points();
+
+    default PathElement replacingCoordinate(PointKind k, double coord, Axis axis) {
+        PathElementKind kind = kind();
+        if (kind == PathElementKind.CLOSE) {
+            throw new IllegalStateException(kind + " does not contain any points");
+        }
+        double[] pts = points();
+        pts = Arrays.copyOf(pts, pts.length);
+        int offset = k.arrayPositionOffset();
+        if (axis == Axis.VERTICAL) {
+            offset++;
+        }
+        pts[offset] = coord;
+        return new SimplePathElement(type(), pts);
+    }
+
+    default PathElement replacingDestination(double x, double y) {
+        PathElementKind kind = kind();
+        if (kind == PathElementKind.CLOSE) {
+            throw new IllegalStateException(kind + " does not contain any points");
+        }
+        double[] pts = points();
+        pts = Arrays.copyOf(pts, pts.length);
+        int offset = kind.destinationPointArrayOffset();
+        pts[offset] = x;
+        pts[offset + 1] = y;
+        return new SimplePathElement(type(), pts);
+    }
 
     /**
      * Create a flyweight path element which can be updated from a path
@@ -127,7 +156,8 @@ public interface PathElement extends Iterable<EqPointDouble> {
      * @return An iterator
      */
     public static Iterable<PathElement> iterable(Shape shape, AffineTransform xform) {
-        return () -> elementIterator(shape.getPathIterator(xform));
+//        return () -> elementIterator(shape.getPathIterator(xform));
+        return PathElementIterator.pathIterable(() -> shape.getPathIterator(xform));
     }
 
     /**
@@ -139,54 +169,7 @@ public interface PathElement extends Iterable<EqPointDouble> {
      * @return An iterator
      */
     public static Iterator<PathElement> elementIterator(PathIterator iter) {
-        final FlyweightPathElement fly = new FlyweightPathElement();
-        return new Iterator<PathElement>() {
-            private byte state = 0;
-
-            private void updateState() {
-                if (state == 0) {
-                    boolean hasNext = fly.update(iter);
-                    if (hasNext) {
-                        state = 1;
-                    } else {
-                        state = 2;
-                    }
-                }
-            }
-
-            @Override
-            public boolean hasNext() {
-                switch (state) {
-                    case 0:
-                        updateState();
-                        return hasNext();
-                    case 1:
-                        return true;
-                    case 2:
-                        return false;
-                    default:
-                        throw new IllegalStateException("Bad state " + state);
-                }
-            }
-
-            @Override
-            public PathElement next() {
-                updateState();
-                if (!iter.isDone()) {
-                    iter.next();
-                }
-                switch (state) {
-                    case 0:
-                        throw new AssertionError("Cannot be in 0 after updateState()");
-                    case 1:
-                        return fly;
-                    case 2:
-                        throw new NoSuchElementException("Done");
-                    default:
-                        throw new IllegalStateException("Bad state " + state);
-                }
-            }
-        };
+        return PathElementIterator.iterator(iter);
     }
 
     /**
@@ -313,6 +296,31 @@ public interface PathElement extends Iterable<EqPointDouble> {
     }
 
     default void applyTo(Path2D path) {
+        double[] data = points();
+        PathElementKind k = kind();
+        assert k == PathElementKind.CLOSE || data.length >= k.arraySize();
+        switch (k) {
+            case CLOSE:
+                path.closePath();
+                break;
+            case LINE:
+                path.lineTo(data[0], data[1]);
+                break;
+            case MOVE:
+                path.moveTo(data[0], data[1]);
+                break;
+            case QUADRATIC:
+                path.quadTo(data[0], data[1], data[2], data[3]);
+                break;
+            case CUBIC:
+                path.curveTo(data[0], data[1], data[2], data[3], data[4], data[5]);
+                break;
+            default:
+                throw new AssertionError(k);
+        }
+    }
+
+    default void applyTo(PathLike path) {
         double[] data = points();
         PathElementKind k = kind();
         assert k == PathElementKind.CLOSE || data.length >= k.arraySize();

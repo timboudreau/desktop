@@ -57,6 +57,10 @@ public final strictfp class Circle implements Shape, Sector {
         this(0, 0);
     }
 
+    public Circle(double radius) {
+        this(0, 0, radius);
+    }
+
     public Circle(Point2D center) {
         centerX = center.getX();
         centerY = center.getY();
@@ -448,7 +452,6 @@ public final strictfp class Circle implements Shape, Sector {
         this.centerY = shape.getCenterY() + 0.0;
         return this;
     }
-
 
     public Circle setRadius(double radius) {
         this.radius = Math.abs(radius);

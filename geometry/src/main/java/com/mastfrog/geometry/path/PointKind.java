@@ -24,6 +24,7 @@
 package com.mastfrog.geometry.path;
 
 /**
+ * Enumeration of the kinds of points that can be part of a Java2D shape.
  *
  * @author Tim Boudreau
  */
@@ -35,7 +36,13 @@ public enum PointKind {
     CUBIC_SECOND_CONTROL_POINT,
     CUBIC_DESTINATION_POINT,
     LINE_DESTINATION_POINT,
-    MOVE_DESTINATION_POINT;
+    MOVE_DESTINATION_POINT,
+    /**
+     * Some uses of this library involve point types that are not part of
+     * the traditional Java2D panoply, so this is a placeholder value for
+     * those.
+     */
+    OTHER;
 
     public int pointIndex() {
         switch (this) {
@@ -49,12 +56,28 @@ public enum PointKind {
                 return 2;
             case CUBIC_DESTINATION_POINT:
                 return 3;
+            case OTHER :
+                return -1;
             default:
                 throw new AssertionError(this);
         }
     }
 
+    public boolean isCurvePoint() {
+        switch(this) {
+            case LINE_DESTINATION_POINT :
+            case MOVE_DESTINATION_POINT :
+            case OTHER :
+                return false;
+            default :
+                return true;
+        }
+    }
+
     public int arrayPositionOffset() {
+        if (this == OTHER) {
+            return -1;
+        }
         return pointIndex() * 2;
     }
 
@@ -71,6 +94,8 @@ public enum PointKind {
                 return PathElementKind.LINE;
             case MOVE_DESTINATION_POINT:
                 return PathElementKind.MOVE;
+            case OTHER :
+                return null;
             default:
                 throw new AssertionError(this);
         }
@@ -82,6 +107,7 @@ public enum PointKind {
             case LINE_DESTINATION_POINT:
             case QUADRATIC_DESTINATION_POINT:
             case MOVE_DESTINATION_POINT:
+            case OTHER :
                 return true;
             default:
                 return false;

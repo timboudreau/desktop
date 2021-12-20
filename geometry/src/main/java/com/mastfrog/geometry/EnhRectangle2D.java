@@ -223,6 +223,70 @@ public class EnhRectangle2D extends Rectangle2D.Double implements EnhancedShape,
         return GeometryStrings.toString(this);
     }
 
+    public EqLine leftEdge() {
+        return new EqLine(x, y, x, bottom());
+    }
+
+    public EqLine rightEdge() {
+        return new EqLine(right(), y, right(), bottom());
+    }
+
+    public EqLine topEdge() {
+        return new EqLine(x, y, right(), y);
+    }
+
+    public EqLine bottomEdge() {
+        return new EqLine(x, bottom(), right(), bottom());
+    }
+
+    public void bottomLeft(DoubleBiConsumer c) {
+        c.accept(x, y + height);
+    }
+
+    public EqPointDouble bottomLeft() {
+        return new EqPointDouble(x, y + height);
+    }
+
+    public void bottomRight(DoubleBiConsumer c) {
+        c.accept(x + width, y + height);
+    }
+
+    public EqPointDouble bottomRight() {
+        return new EqPointDouble(x + width, y + height);
+    }
+
+    public void bottomCenter(DoubleBiConsumer c) {
+        c.accept(x + width / 2, y + height);
+    }
+
+    public EqPointDouble bottomCenter() {
+        return new EqPointDouble(x + width / 2, y + height);
+    }
+
+    public void topLeft(DoubleBiConsumer c) {
+        c.accept(x, y);
+    }
+
+    public EqPointDouble topLeft() {
+        return new EqPointDouble(x, y);
+    }
+
+    public void topRight(DoubleBiConsumer c) {
+        c.accept(x + width, y);
+    }
+
+    public EqPointDouble topRight() {
+        return new EqPointDouble(x + width, y);
+    }
+
+    public void topCenter(DoubleBiConsumer c) {
+        c.accept(x + width / 2, y);
+    }
+
+    public EqPointDouble topCenter() {
+        return new EqPointDouble(x + width / 2, y);
+    }
+
     public EnhRectangle2D growVertically(double by) {
         double half = by / 2;
         y += half;
@@ -272,6 +336,14 @@ public class EnhRectangle2D extends Rectangle2D.Double implements EnhancedShape,
         y -= half;
         width += by;
         height += by;
+        if (width < 0) {
+            x += width;
+            width = -width;
+        }
+        if (height < 0) {
+            y += height;
+            height = -height;
+        }
         return this;
     }
 

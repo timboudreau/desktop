@@ -178,6 +178,17 @@ public final class Polygon2D extends AbstractShape implements EnhancedShape, Int
         }
     }
 
+    public boolean isEmpty() {
+        if (this.pointCount() == 0) {
+            return true;
+        }
+        Rectangle2D rect = getBounds2D();
+        if (rect.getWidth() < 1 || rect.getHeight() < 1) {
+            return true;
+        }
+        return false;
+    }
+
     private void changed() {
         calc = null;
         clockwise = null;
