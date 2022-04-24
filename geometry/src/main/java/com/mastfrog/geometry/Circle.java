@@ -513,6 +513,10 @@ public final strictfp class Circle implements Shape, Sector {
         return Quadrant.forAngle(angleOf(x, y));
     }
 
+    public double distanceToCenter(Point2D pt) {
+        return distanceToCenter(pt.getX(), pt.getY());
+    }
+
     public double distanceToCenter(double x, double y) {
         double distX = x - centerX;
         double distY = y - centerY;
@@ -522,6 +526,12 @@ public final strictfp class Circle implements Shape, Sector {
 
     void setUsablePercentage(double factor) {
         this.factor = Math.max(0.001D, Math.min(1D, factor));
+    }
+
+    public EqPointDouble position(double angle) {
+        EqPointDouble pos = new EqPointDouble();
+        positionOf(angle, pos);
+        return pos;
     }
 
     public double[] positionOf(double angle) {

@@ -430,9 +430,7 @@ public class GeometryUtils {
             if (last < 0) {
                 last = points.length - 2;
             }
-            System.out.println("last for " + test + " is " + last);
             do {
-                System.out.println(test + " and " + against);
                 double ax = points[against];
                 double ay = points[against + 1];
 
