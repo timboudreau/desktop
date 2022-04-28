@@ -112,6 +112,10 @@ public class TextWrapLabelUI extends LabelUI {
     }
     
     public Dimension doPaint(Graphics2D gg, Insets ins, String txt, FontMetrics fm, Paint fg, Font f, double leading) {
+        return doPaint(wrapTrigger, gg, ins, txt, fm, fg, f, leading);
+    }
+
+    public static Dimension doPaint(int wrapTrigger, Graphics2D gg, Insets ins, String txt, FontMetrics fm, Paint fg, Font f, double leading) {
         String[] words;
         if (txt.length() < wrapTrigger) {
             words = new String[]{txt};
