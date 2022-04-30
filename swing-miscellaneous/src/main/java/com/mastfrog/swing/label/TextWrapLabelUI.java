@@ -155,7 +155,7 @@ public class TextWrapLabelUI extends LabelUI {
                 x += spaceWidth;
                 maxX = Math.max (maxX, x);
                 int nextWordLength = words[i+1].length();
-                if (charCount + nextWordLength > wrapPoint) {
+                if (charCount + nextWordLength > wrapTrigger) {
                     x = ins.left;
                     top += lineGap;
                     maxY += lineGap;
