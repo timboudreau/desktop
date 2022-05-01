@@ -96,10 +96,12 @@ public final class PopupSliderUI extends SliderUI implements PropertyChangeListe
     public PopupSliderUI() {
         try {
             InputStream downArrowStream = PopupSliderUI.class.getResourceAsStream("downarrow.png");
+            assert downArrowStream != null : "No downarrow.png on classpath";
             BufferedImage downArrowImage = ImageIO.read(downArrowStream);
             downArrow = new ImageIcon(downArrowImage);
 
             InputStream downArrowLitStream = PopupSliderUI.class.getResourceAsStream("downarrowlit.png");
+            assert downArrowLitStream != null : "No downarrow.png on classpath";
             BufferedImage downArrowLitImage = ImageIO.read(downArrowLitStream);
             downArrowLit = new ImageIcon(downArrowLitImage);
         } catch (Exception e) {
