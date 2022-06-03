@@ -21,7 +21,13 @@ open module com.mastfrog.geometry {
 
     // Transitive detected by source scan
     requires com.mastfrog.search;
+
+    // Inferred from source scan
+    requires com.mastfrog.strings;
     requires java.desktop;
     requires java.logging;
+
+    // Inferred from test-source-scan
+    requires transitive org.junit.jupiter.api;
 
 }

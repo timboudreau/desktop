@@ -4,4 +4,7 @@ open module com.mastfrog.colors {
     requires java.desktop;
     requires java.logging;
 
+    // Inferred from test-source-scan
+    requires transitive org.junit.jupiter.api;
+
 }
