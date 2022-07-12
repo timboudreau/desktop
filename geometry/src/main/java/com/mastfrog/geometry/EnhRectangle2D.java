@@ -30,6 +30,7 @@ import com.mastfrog.geometry.util.GeometryStrings;
 import com.mastfrog.geometry.util.GeometryUtils;
 import java.awt.BasicStroke;
 import java.awt.Shape;
+import java.awt.geom.Dimension2D;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
@@ -398,5 +399,9 @@ public class EnhRectangle2D extends Rectangle2D.Double implements EnhancedShape,
         } else {
             super.add(r);
         }
+    }
+
+    public Dimension2D getSize() {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 }

@@ -41,46 +41,121 @@ public final class EnumComboBoxModel<T extends Enum<T>> implements ComboBoxModel
     private T selectedItem;
     private final Class<T> type;
 
-    EnumComboBoxModel(T selectedItem) {
-        this(selectedItem.getDeclaringClass(), selectedItem);
+    EnumComboBoxModel(T selectedItem, EnumSortMode mode) {
+        this(selectedItem.getDeclaringClass(), mode, selectedItem);
     }
 
-    EnumComboBoxModel(Class<T> type) {
-        this(type, null);
+    EnumComboBoxModel(Class<T> type, EnumSortMode mode) {
+        this(type, mode, null);
     }
 
-    EnumComboBoxModel(Class<T> type, T selectedItem) {
+    EnumComboBoxModel(Class<T> type, EnumSortMode mode, T selectedItem) {
         this.type = type;
-        values.addAll(Arrays.asList(type.getEnumConstants()));
+        values.addAll(new ArrayList<>(Arrays.asList(type.getEnumConstants())));
+        mode.sort(values);
         this.selectedItem = selectedItem == null ? values.isEmpty() ? null
                 : values.get(0) : selectedItem;
     }
 
+    /**
+     * Ways the contents of an enum combo box may be sorted.
+     */
+    public enum EnumSortMode {
+        /**
+         * Use the order of enum constants.
+         */
+        NATURAL,
+        /**
+         * Sort on the name() of enum constants.
+         */
+        NAME,
+        /**
+         * Sort case-sensitively on the toString() value of enum constants.
+         */
+        TO_STRING_CASE_SENSITIVE,
+        /**
+         * Sort case-insensitively on the toString() value of enum constants.
+         */
+        TO_STRING_CASE_INSENSITIVE;
+
+        static EnumSortMode defaultMode() {
+            return TO_STRING_CASE_SENSITIVE;
+        }
+
+        <E extends Enum<E>> void sort(List<E> items) {
+            switch (this) {
+                case NATURAL:
+                    return;
+                case NAME:
+                    items.sort((a, b) -> {
+                        return a.name().compareTo(b.name());
+                    });
+                    break;
+                case TO_STRING_CASE_INSENSITIVE:
+                    items.sort((a, b) -> {
+                        return a.toString().compareToIgnoreCase(b.toString());
+                    });
+                    break;
+                case TO_STRING_CASE_SENSITIVE:
+                    items.sort((a, b) -> {
+                        return a.toString().compareTo(b.toString());
+                    });
+            }
+        }
+    }
+
     public static <T extends Enum<T>> ComboBoxModel<T> newModel(Class<T> type) {
-        return new EnumComboBoxModel<>(type);
+        return new EnumComboBoxModel<>(type, EnumSortMode.defaultMode());
     }
 
     public static <T extends Enum<T>> ComboBoxModel<T> newModel(Class<T> type, T selected) {
         assert selected == null || type.isInstance(selected);
-        return new EnumComboBoxModel<>(type, selected);
+        return new EnumComboBoxModel<>(type, EnumSortMode.defaultMode(), selected);
     }
 
     public static <T extends Enum<T>> ComboBoxModel<T> newModel(T selected) {
-        return new EnumComboBoxModel<>(selected);
+        return new EnumComboBoxModel<>(selected, EnumSortMode.defaultMode());
     }
 
     public static <T extends Enum<T>> JComboBox<T> newComboBox(Class<T> type) {
-        return new JComboBox<>(new EnumComboBoxModel<>(type));
+        return new JComboBox<>(new EnumComboBoxModel<>(type, EnumSortMode.defaultMode()));
     }
 
     public static <T extends Enum<T>> JComboBox<T> newComboBox(Class<T> type, T item) {
         assert item == null || type.isInstance(item);
-        return new JComboBox<>(new EnumComboBoxModel<>(type, item));
+        return new JComboBox<>(new EnumComboBoxModel<>(type, EnumSortMode.defaultMode(), item));
     }
 
     public static <T extends Enum<T>> JComboBox<T> newComboBox(T item) {
         assert item != null : "Null item - cannot determine type";
-        return new JComboBox<>(new EnumComboBoxModel<>(item));
+        return new JComboBox<>(new EnumComboBoxModel<>(item, EnumSortMode.defaultMode()));
+    }
+
+    public static <T extends Enum<T>> ComboBoxModel<T> newModel(Class<T> type, EnumSortMode mode) {
+        return new EnumComboBoxModel<>(type, mode);
+    }
+
+    public static <T extends Enum<T>> ComboBoxModel<T> newModel(Class<T> type, T selected, EnumSortMode mode) {
+        assert selected == null || type.isInstance(selected);
+        return new EnumComboBoxModel<>(type, mode, selected);
+    }
+
+    public static <T extends Enum<T>> ComboBoxModel<T> newModel(T selected, EnumSortMode mode) {
+        return new EnumComboBoxModel<>(selected, mode);
+    }
+
+    public static <T extends Enum<T>> JComboBox<T> newComboBox(Class<T> type, EnumSortMode mode) {
+        return new JComboBox<>(new EnumComboBoxModel<>(type, mode));
+    }
+
+    public static <T extends Enum<T>> JComboBox<T> newComboBox(Class<T> type, T item, EnumSortMode mode) {
+        assert item == null || type.isInstance(item);
+        return new JComboBox<>(new EnumComboBoxModel<>(type, mode, item));
+    }
+
+    public static <T extends Enum<T>> JComboBox<T> newComboBox(T item, EnumSortMode mode) {
+        assert item != null : "Null item - cannot determine type";
+        return new JComboBox<>(new EnumComboBoxModel<>(item, mode));
     }
 
     @Override
