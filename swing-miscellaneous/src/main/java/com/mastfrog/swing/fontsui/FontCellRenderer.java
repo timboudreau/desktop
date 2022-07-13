@@ -2,8 +2,6 @@ package com.mastfrog.swing.fontsui;
 
 import java.awt.Component;
 import java.awt.Font;
-import java.lang.ref.Reference;
-import java.lang.ref.SoftReference;
 import javax.swing.JComboBox;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
@@ -28,6 +26,7 @@ public final class FontCellRenderer implements ListCellRenderer {
         view.setTargetFont((Font) value);
         view.setPaintFocusIndicator(cellHasFocus && index >= 0);
         view.setEnabled(box.isEnabled());
+        view.setToolTipText(((Font) value).getFamily());
         if (isSelected) {
             view.setSelectionColor(list.getSelectionBackground());
         } else {
