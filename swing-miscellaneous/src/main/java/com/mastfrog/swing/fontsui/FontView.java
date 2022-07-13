@@ -24,7 +24,11 @@
 package com.mastfrog.swing.fontsui;
 
 import com.mastfrog.geometry.util.PooledTransform;
+import com.mastfrog.swing.HintSets;
+import java.awt.AlphaComposite;
+import static java.awt.AlphaComposite.SRC_OVER;
 import java.awt.Color;
+import java.awt.Composite;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -46,6 +50,8 @@ import javax.swing.UIManager;
 class FontView extends JComponent {
 
     private FontImages fontImages = new FontImages();
+    private static final AlphaComposite DISABLED_COMPOSITE
+            = AlphaComposite.getInstance(SRC_OVER, 0.5F);
 
     private synchronized FontImages images() {
         if (fontImages.isOutOfSync()) {
@@ -80,6 +86,8 @@ class FontView extends JComponent {
 
     @Override
     public void paint(Graphics g) {
+        Graphics2D gg = (Graphics2D) g;
+        HintSets.DISPLAY.apply(gg);
         g.setColor(background());
         g.fillRect(0, 0, getWidth(), getHeight());
         FontImages images = images();
@@ -95,10 +103,23 @@ class FontView extends JComponent {
                     g.setColor(selectionBackground);
                     g.fillRect(0, 0, images.maxWidth + 5, images.maxHeight + 5);
                     if (paintFocus) {
-//                        g.drawRect(1, 1, images.maxWidth - 2, images.maxHeight - 2);
+                        g.drawRect(1, 1, images.maxWidth - 2, images.maxHeight - 2);
                     }
                 }
-                ((Graphics2D) g).drawRenderedImage(image, xform);
+                boolean ena = isEnabled();
+                if (ena) {
+                    gg.drawRenderedImage(image, xform);
+                } else {
+                    Composite old = gg.getComposite();
+                    try {
+                        // No universal way to do this
+                        gg.setComposite(DISABLED_COMPOSITE);
+                        gg.drawRenderedImage(image, xform);
+                    } finally {
+                        gg.setComposite(old);
+                    }
+                }
+                
                 if (xform != null) {
                     PooledTransform.returnToPool(xform);
                 }

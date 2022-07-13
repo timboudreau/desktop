@@ -4,6 +4,7 @@ import java.awt.Component;
 import java.awt.Font;
 import java.lang.ref.Reference;
 import java.lang.ref.SoftReference;
+import javax.swing.JComboBox;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
 
@@ -14,26 +15,19 @@ import javax.swing.ListCellRenderer;
  */
 public final class FontCellRenderer implements ListCellRenderer {
 
-    private static Reference<FontCellRenderer> REF;
     private final FontView view = new FontView();
+    private final JComboBox<Font> box;
 
-    private FontCellRenderer() {
-
-    }
-
-    public static FontCellRenderer instance() {
-        FontCellRenderer result = REF == null ? null : REF.get();
-        if (result == null) {
-            result = new FontCellRenderer();
-            REF = new SoftReference<>(result);
-        }
-        return result;
+    FontCellRenderer(JComboBox<Font> box) {
+        this.box = box;
     }
 
     @Override
-    public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+    public Component getListCellRendererComponent(JList list, Object value,
+            int index, boolean isSelected, boolean cellHasFocus) {
         view.setTargetFont((Font) value);
         view.setPaintFocusIndicator(cellHasFocus && index >= 0);
+        view.setEnabled(box.isEnabled());
         if (isSelected) {
             view.setSelectionColor(list.getSelectionBackground());
         } else {

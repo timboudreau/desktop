@@ -10,6 +10,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ComboBoxModel;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -19,7 +20,6 @@ import javax.swing.UnsupportedLookAndFeelException;
 import static javax.swing.WindowConstants.EXIT_ON_CLOSE;
 import javax.swing.event.ListDataListener;
 import javax.swing.plaf.metal.MetalLookAndFeel;
-import javax.swing.plaf.nimbus.NimbusLookAndFeel;
 
 /**
  * A combo box model for all installed fonts.
@@ -33,14 +33,25 @@ public final class FontComboBoxModel implements ComboBoxModel<Font> {
     private String selectedName;
 
     public static void main(String[] args) throws Exception {
-        UIManager.setLookAndFeel(new NimbusLookAndFeel());
+        System.setProperty("awt.useSystemAAFontSettings", "lcd_hrgb");
+//        System.setProperty("sun.java2d.dpiaware", "false");
+        
+        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+//        UIManager.setLookAndFeel(new NimbusLookAndFeel());
         JFrame jf = new JFrame();
         JPanel p = new JPanel(new FlowLayout());
         p.add(new JLabel("Font"));
         jf.setDefaultCloseOperation(EXIT_ON_CLOSE);
-        p.add(newFontComboBox());
+        JComboBox<Font> box = newFontComboBox();
+        p.add(box);
+        JCheckBox cb = new JCheckBox("Enabled");
+        cb.setSelected(true);
+        cb.addActionListener(ae -> {
+            box.setEnabled(cb.isSelected());
+        });
+        p.add(cb);
 
-        JButton jb = new JButton("Change");
+        JButton jb = new JButton("Change L&F");
         jb.addActionListener(ae -> {
             try {
                 UIManager.setLookAndFeel(new MetalLookAndFeel());
@@ -71,7 +82,7 @@ public final class FontComboBoxModel implements ComboBoxModel<Font> {
     @SuppressWarnings("unchecked")
     public static JComboBox<Font> newFontComboBox() {
         JComboBox<Font> result = new JComboBox<>(new FontComboBoxModel());
-        result.setRenderer(FontCellRenderer.instance());
+        result.setRenderer(new FontCellRenderer(result));
         return result;
     }
 

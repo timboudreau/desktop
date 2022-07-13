@@ -23,14 +23,15 @@
  */
 package com.mastfrog.swing.fontsui;
 
+import com.mastfrog.swing.HintSets;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.GraphicsEnvironment;
-import java.awt.RenderingHints;
 import java.awt.Transparency;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.NoninvertibleTransformException;
 import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -43,7 +44,7 @@ import javax.swing.UIManager;
  */
 final class FontImages {
 
-    private final int gap = 5;
+    private final int gap = 2;
     private final String[] names;
     private final int[] positions;
     private final int[] heights;
@@ -64,16 +65,22 @@ final class FontImages {
         return image.getSubimage(0, top, Math.max(1, maxWidth), height);
     }
 
-    static Font[] allFonts() {
-        String[] names = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
-        Font[] result = new Font[names.length];
-        for (int i = 0; i < names.length; i++) {
-            Font f = new Font(names[i], Font.PLAIN, fontSize());
-            result[i] = f;
+    static Integer FONT_SIZE;
+    static Font UI_FONT;
+    
+    static Font uiFont() {
+        Font f = UIManager.getFont("Label.font");
+        if (f == null) {
+            f = UIManager.getFont("ComboBox.font");
         }
-        return result;
+        if (f == null) {
+            f = UIManager.getFont("controlFont");
+        }
+        if (f == null) {
+            return new Font("Arial", Font.PLAIN, 13);
+        }
+        return f;
     }
-    static Integer FONT_SIZE = null;
 
     static int fontSize() {
         if (FONT_SIZE != null) {
@@ -88,10 +95,7 @@ final class FontImages {
             } catch (NumberFormatException nfe) {
             }
         }
-        Font f = UIManager.getFont("controlFont");
-        if (f == null) {
-            f = UIManager.getFont("Label.font");
-        }
+        Font f = uiFont();
         if (f != null) {
             result = f.getSize();
         }
@@ -126,6 +130,7 @@ final class FontImages {
     }
 
     FontImages() {
+        boolean mac = System.getProperty("os.name", "-").contains("Mac OS");
         names = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
         lookAndFeelId = UIManager.getLookAndFeel().getID();
         Arrays.sort(names, (a, b) -> {
@@ -144,18 +149,40 @@ final class FontImages {
         maxHeight = maxWidth = Integer.MIN_VALUE;
         int maxAscent = Integer.MIN_VALUE;
         BufferedImage img = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration().createCompatibleImage(1, 1, Transparency.OPAQUE);
+//        BufferedImage img = new BufferedImage(1, 1, TYPE_INT_RGB);
         // Ensure if we are using high dpi scaling, that gets applied to the image's graphics - don't
         // assume BufferedImage.createGraphics() will do the right thing - on Mac OS it will result in
         // 2x scaling
-        Graphics2D g = GraphicsEnvironment.getLocalGraphicsEnvironment().createGraphics(img);
+//        Graphics2D g = GraphicsEnvironment.getLocalGraphicsEnvironment().createGraphics(img);
+        Graphics2D g = HintSets.DISPLAY_TEXT_ANTIALIASED.apply(img.createGraphics());
+        AffineTransform normXform = GraphicsEnvironment
+                .getLocalGraphicsEnvironment()
+                .getDefaultScreenDevice()
+                .getDefaultConfiguration()
+                .getNormalizingTransform();
+
+        AffineTransform invXform = null;
+        try {
+            invXform = normXform.createInverse();
+            System.out.println("INVXF " + invXform);
+            g.setTransform(invXform);
+        } catch (NoninvertibleTransformException ex) {
+        }
+
+//        g.setTransform(invXform);
+        int fontSize = fontSize();
+        System.out.println("FONT SIZE " + fontSize + " xf " + g.getTransform());
         try {
             for (int i = 0; i < fonts.length; i++) {
-                Font f = new Font(names[i], Font.PLAIN, fontSize());
+                Font f = new Font(names[i], Font.PLAIN, fontSize);
+                if (invXform != null) {
+//                    f = f.deriveFont(invXform);
+                }
                 fonts[i] = f;
                 g.setFont(f);
                 FontMetrics fm = g.getFontMetrics(f);
                 ascents[i] = fm.getAscent();
-                heights[i] = fm.getHeight();
+                heights[i] = fm.getAscent() + fm.getDescent();
                 widths[i] = fm.stringWidth(names[i]);
                 maxAscent = Math.max(maxAscent, ascents[i]);
                 minWidth = Math.min(widths[i], minWidth);
@@ -170,15 +197,19 @@ final class FontImages {
         this.maxHeight = maxHeight;
         this.maxWidth = maxWidth;
         int imageHeight = (maxHeight + gap) * fonts.length;
-        img = image = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration().createCompatibleImage(2 + maxWidth + 2, imageHeight, Transparency.TRANSLUCENT);
+        img = image = GraphicsEnvironment
+                .getLocalGraphicsEnvironment()
+                .getDefaultScreenDevice()
+                .getDefaultConfiguration()
+                .createCompatibleImage(2 + maxWidth + 2, imageHeight, Transparency.TRANSLUCENT);
+//        img = image = new BufferedImage(2 + maxWidth + 2, imageHeight, mac ? TYPE_INT_ARGB_PRE : TYPE_INT_ARGB);
         // Ensure if we are using high dpi scaling, that gets applied to the image's graphics - don't
         // assume BufferedImage.createGraphics() will do the right thing - on Mac OS it will result in
         // 2x scaling
-        g = GraphicsEnvironment.getLocalGraphicsEnvironment().createGraphics(img);
+        g = HintSets.DISPLAY_MAX_QUALITY.apply(img.createGraphics());
+
         int y = 0;
         try {
-            g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-            g.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
             g.setColor(foreground());
             for (int i = 0; i < fonts.length; i++) {
                 positions[i] = y;
@@ -191,7 +222,11 @@ final class FontImages {
                     }
                 }
                 if (problematic) {
-                    g.setFont(new Font("Times New Roman", Font.ITALIC, fontSize()));
+                    Font substititute = new Font("Times New Roman", Font.ITALIC, fontSize);
+                    if (normXform != null) {
+                        substititute = substititute.deriveFont(invXform);
+                    }
+                    g.setFont(substititute);
                     FontMetrics fm = g.getFontMetrics();
                     widths[i] = fm.stringWidth(names[i]);
                     heights[i] = fm.getHeight();
@@ -206,7 +241,6 @@ final class FontImages {
                 if (heights[i] < maxHeight) {
                     Font f = g.getFont();
                     double scale = (double) maxHeight / (double) heights[i];
-                    f = f.deriveFont(AffineTransform.getScaleInstance(scale, scale));
                     g.setFont(f);
                     ascents[i] = g.getFontMetrics().getAscent();
                     heights[i] = g.getFontMetrics().getHeight();
