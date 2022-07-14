@@ -24,6 +24,12 @@
 package com.mastfrog.colors;
 
 import static com.mastfrog.colors.GradientUtils.colorToString;
+import com.mastfrog.colors.space.LabColor;
+import com.mastfrog.colors.space.LabColor.LabComponents;
+import static com.mastfrog.colors.space.LabColor.LabComponents.A;
+import static com.mastfrog.colors.space.LabColor.LabComponents.B;
+import static com.mastfrog.colors.space.LabColor.LabComponents.L;
+import com.telenav.cactus.caption.placer.PerceptualBrightnessBand;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -869,6 +875,37 @@ public final class Colors {
      * other colors, or otherwise alter it.
      */
     public interface ColorSupplier extends Supplier<Color> {
+
+        default double perceptualBrightness() {
+            return new LabColor(get()).l();
+        }
+
+        default PerceptualBrightnessBand band() {
+            return PerceptualBrightnessBand.of(get());
+        }
+
+        default ColorSupplier perceptuallyContrasting() {
+            return () -> {
+                Color c = get();
+                PerceptualBrightnessBand dml = PerceptualBrightnessBand.of(c);
+                switch (dml) {
+                    case DARK:
+                        return new LabColor(c).withComponent(L, L.convert(0.875))
+                                .redistributeValues(0.75, A, B)
+                                .toColor();
+                    case LIGHT:
+                        return new LabColor(c).withComponent(L, L.convert(0.25))
+                                .redistributeValues(0.75, A, B)
+                                .toColor();
+                    case MID:
+                        LabColor lc = new LabColor(c);
+                        return lc.withComponent(L, LabComponents.L.convert(0.9))
+                                .redistributeValues(0.5, A, B)
+                                .toColor();
+                }
+                return c;
+            };
+        }
 
         /**
          * Simply returns a supplier where the red, green and blue values are

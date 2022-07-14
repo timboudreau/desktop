@@ -44,7 +44,7 @@ public final class XyzColor implements ColorRepresentation<XyzColor, XyzComponen
     /**
      * Component type for XyzColor.
      */
-    public enum XyzComponents implements ColorComponent {
+    public enum XyzComponents implements ColorRepresentation.ColorComponent {
         // These magic values are the values encountered when traversing
         // the entire integer RGB color space of java.awt.Color.
         X(0, 95.05),

@@ -44,7 +44,7 @@ public final class LabColor implements ColorRepresentation<LabColor, LabComponen
      * java.awt.Color - it is legal to produce instances outside the range -
      * they just may not translate as expected to RGB.
      */
-    public enum LabComponents implements ColorComponent {
+    public enum LabComponents implements ColorRepresentation.ColorComponent {
         // These magic values are the maximum and minimum values
         // encountered when traversing the entire integer RGB color space
         // used by java.awt.Color
@@ -122,6 +122,18 @@ public final class LabColor implements ColorRepresentation<LabColor, LabComponen
         b = xyz[2];
         this.illuminant = illuminant;
         this.standard = standard;
+    }
+
+    public double l() {
+        return l;
+    }
+
+    public double a() {
+        return a;
+    }
+
+    public double b() {
+        return b;
     }
 
     public LabColor withStandard(Standard standard) {
