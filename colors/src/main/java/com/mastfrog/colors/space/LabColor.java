@@ -124,6 +124,18 @@ public final class LabColor implements ColorRepresentation<LabColor, LabComponen
         this.standard = standard;
     }
 
+    public double l() {
+        return l;
+    }
+
+    public double a() {
+        return a;
+    }
+
+    public double b() {
+        return b;
+    }
+
     public LabColor withStandard(Standard standard) {
         if (standard == this.standard) {
             return this;
