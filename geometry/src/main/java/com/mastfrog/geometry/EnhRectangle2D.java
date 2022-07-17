@@ -402,6 +402,10 @@ public class EnhRectangle2D extends Rectangle2D.Double implements EnhancedShape,
     }
 
     public Dimension2D getSize() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        return size();
+    }
+    
+    public DimensionDouble size() {
+        return new DimensionDouble(width, height);
     }
 }

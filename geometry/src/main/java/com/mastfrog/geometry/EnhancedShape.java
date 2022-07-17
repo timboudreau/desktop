@@ -59,6 +59,8 @@ public interface EnhancedShape extends Intersectable {
      * @return The number of points
      */
     int pointCount();
+    
+    DimensionDouble size();
 
     default List<? extends CornerAngle> cornerAngles() {
         List<CornerAngle> result = new ArrayList<>(pointCount() + 1);

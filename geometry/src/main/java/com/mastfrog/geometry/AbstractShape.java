@@ -29,6 +29,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.geom.RectangularShape;
 
 /**
  * Base class for shapes containing common logic for computing
@@ -82,6 +83,10 @@ public abstract class AbstractShape implements Shape {
     @Override
     public final Rectangle2D getBounds2D() {
         return addToBounds(new Rectangle2D.Double());
+    }
+    
+    public DimensionDouble size() {
+        return DimensionDouble.of(getBounds2D());
     }
 
     @Override

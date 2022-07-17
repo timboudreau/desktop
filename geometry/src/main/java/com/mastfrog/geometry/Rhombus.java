@@ -85,6 +85,11 @@ public final class Rhombus implements Shape, EnhancedShape {
         this.circ.setRotation(toCopy.circ.rotation());
     }
 
+    @Override
+    public DimensionDouble size() {
+        return DimensionDouble.of(getBounds2D());
+    }
+
     public double centerX() {
         return circ.centerX;
     }

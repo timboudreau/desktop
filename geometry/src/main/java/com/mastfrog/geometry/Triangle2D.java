@@ -38,6 +38,8 @@ import static java.awt.geom.PathIterator.WIND_NON_ZERO;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RectangularShape;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -75,6 +77,18 @@ public class Triangle2D extends AbstractShape implements EnhancedShape, Tesselab
         this.points = Arrays.copyOf(other.points, other.points.length);
     }
 
+    @Override
+    public DimensionDouble size() {
+        double minX, minY, maxX, maxY;
+        minX = minY = Double.MAX_VALUE;
+        maxX = maxY = Double.MAX_VALUE;
+        for (int i=0; i < points.length; i+=2) {
+            minX = min(minX, points[i]);
+            maxX = max(maxX, points[i+1]);
+        }
+        return new DimensionDouble(minX, minY);
+    }
+    
     @Override
     public <T extends Rectangle2D> T addToBounds(T into) {
         double minX = Math.min(points[0], Math.min(points[2], points[4]));

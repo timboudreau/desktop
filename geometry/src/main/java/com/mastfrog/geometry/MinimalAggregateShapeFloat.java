@@ -156,6 +156,11 @@ public final class MinimalAggregateShapeFloat implements Shape, EnhancedShape {
     }
 
     @Override
+    public DimensionDouble size() {
+        return new DimensionDouble(maxX - minX, maxY - minY);
+    }
+    
+    @Override
     public boolean contains(double x, double y) {
         return (x >= minX && x < maxX && y >= minY && y < maxY);
     }
