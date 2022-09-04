@@ -74,7 +74,7 @@ public final class Scroller {
         Scroller s = (Scroller) comp.getClientProperty(Scroller.class.getName());
         if (s == null) {
             JScrollPane pane = (JScrollPane) SwingUtilities.getAncestorOfClass(JScrollPane.class, comp);
-            if (pane != null) {
+            if (pane == null) {
                 throw new IllegalArgumentException("No scroll pane ancestor of " + comp);
             }
             s = new Scroller(comp, pane);
