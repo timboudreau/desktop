@@ -23,8 +23,6 @@
  */
 package com.mastfrog.geometry.util;
 
-import com.mastfrog.geometry.util.PooledTransform;
-import com.mastfrog.geometry.util.PooledTransform;
 import java.awt.geom.AffineTransform;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
@@ -51,10 +49,6 @@ public class PooledTransformTest {
         int hash1 = System.identityHashCode(xf1);
         int hash2 = System.identityHashCode(xf2);
 
-        int oldReclaimed = PooledTransform.POOL.recycled();
-        int phantSize = PooledTransform.POOL.outstanding();
-        System.out.println("reclaimed was " + oldReclaimed);
-        System.out.println("old phants " + phantSize);
         t1 = null;
         for (int i = 0; i < 150; i++) {
             System.gc();
@@ -62,10 +56,6 @@ public class PooledTransformTest {
             Thread.sleep(10);
 //            System.out.println("  phants sz now " + PooledTransform.phants.size());
         }
-        int newReclaimed = PooledTransform.POOL.recycled();
-        int newPhantSize = PooledTransform.POOL.outstanding();
-        System.out.println("reclaimed was " + newReclaimed);
-        System.out.println("old phants " + newPhantSize);
 
         Thing t2 = new Thing();
         AffineTransform xf3 = PooledTransform.getTranslateInstance(3, 3, t2);

@@ -225,13 +225,9 @@ public final class PooledTransform extends AffineTransform {
         POOL.returnToPool((PooledTransform) xform);
     }
 
-    static final PhantomReferencePool<PooledTransform> POOL = new PhantomReferencePool<>(
-            Thread.NORM_PRIORITY + 1,
-            "AffineTransform", 200, PooledTransform::new);
-
-    static {
-        POOL.start();
-    }
+    static final com.mastfrog.reference.ReferencePool<PooledTransform> POOL
+            = com.mastfrog.reference.ReferencePool.create(Thread.NORM_PRIORITY + 1,
+                    "AffineTransform", 200, PooledTransform::new);
 
     public static TransformSupplier scopedTo(Object o) {
         return new TransformSupplier(o);
