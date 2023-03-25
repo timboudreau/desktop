@@ -82,13 +82,13 @@ public class Triangle2D extends AbstractShape implements EnhancedShape, Tesselab
         double minX, minY, maxX, maxY;
         minX = minY = Double.MAX_VALUE;
         maxX = maxY = Double.MAX_VALUE;
-        for (int i=0; i < points.length; i+=2) {
+        for (int i = 0; i < points.length; i += 2) {
             minX = min(minX, points[i]);
-            maxX = max(maxX, points[i+1]);
+            maxX = max(maxX, points[i + 1]);
         }
         return new DimensionDouble(minX, minY);
     }
-    
+
     @Override
     public <T extends Rectangle2D> T addToBounds(T into) {
         double minX = Math.min(points[0], Math.min(points[2], points[4]));
@@ -118,8 +118,11 @@ public class Triangle2D extends AbstractShape implements EnhancedShape, Tesselab
 
     @Override
     public PathIterator getPathIterator(AffineTransform at) {
-        byte[] types = new byte[]{SEG_MOVETO, SEG_LINETO, SEG_LINETO, SEG_CLOSE};
-        return new ArrayPathIteratorDouble(WIND_NON_ZERO, types, points, at);
+        byte[] types = new byte[]{SEG_MOVETO, SEG_LINETO, SEG_LINETO, SEG_LINETO, SEG_CLOSE};
+        double[] pts = Arrays.copyOf(points, points.length + 2);
+        pts[pts.length - 2] = pts[0];
+        pts[pts.length - 1] = pts[1];
+        return new ArrayPathIteratorDouble(WIND_NON_ZERO, types, pts, at);
     }
 
     @Override

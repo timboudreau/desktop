@@ -60,7 +60,7 @@ public final class ArrayPathIteratorDouble implements PathIterator {
 
     @Override
     public int getWindingRule() {
-        return windingRules.nearestKey(0, true);
+        return windingRules == null ? WIND_EVEN_ODD : windingRules.nearestKey(0, true);
     }
 
     @Override

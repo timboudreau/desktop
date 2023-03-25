@@ -35,9 +35,13 @@ import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RectangularShape;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 /**
- * Extends rectangle with decoration methods and a few other things.
+ * Extends rectangle with decoration methods and a few other things;
+ * particularly, an empty rectangle can have shapes added to its bounds without
+ * remaining anchored at 0,0 if it started as 0,0,0,0.
  *
  * @author Tim Boudreau
  */
@@ -68,8 +72,162 @@ public class EnhRectangle2D extends Rectangle2D.Double implements EnhancedShape,
         return new EnhRectangle2D(this);
     }
 
+    public EnhRectangle2D grownBy(double val) {
+        EnhRectangle2D result = copy();
+        result.grow(val);
+        return result;
+    }
+
     public void clear() {
         x = y = width = height = 0;
+    }
+
+    /**
+     * Get the intersection of a line and this rectangle, if any.
+     * Returns null if there are not two different intersection points.
+     * The intersection points must be on the line as specified, without
+     * requiring the line to be extended.
+     *
+     * @param ln A line
+     * @return A line or null
+     */
+    public EqLine intersection(EqLine ln) {
+        EqPointDouble start = null;
+        EqPointDouble end = null;
+
+        for (EqLine l : new EqLine[] {leftEdge(), topEdge(), rightEdge(), bottomEdge()}) {
+            EqPointDouble pt = l.intersectionPoint(ln);
+            if (pt != null) {
+                if (start == null) {
+                    start = pt;
+                } else {
+                    end = pt;
+                    break;
+                }
+            }
+        }
+
+        if (start != null && end != null) {
+            return new EqLine(start, end);
+        }
+        return null;
+    }
+
+    /**
+     * Multiply the width and height by the passed factor, without
+     * changing the x and y coordinates (unlike grow, which grows the
+     * rectangle in all directions).
+     *
+     * @param by The multiplier
+     * @return this
+     */
+    public EnhRectangle2D multiplySize(double by) {
+        width *= by;
+        height *= by;
+        return this;
+    }
+
+    public EnhRectangle2D multiplySizeMovingOrigin(double by) {
+        double newWidth = width * by;
+        double newHeight = height * by;
+        x -= newWidth - width;
+        y -= newHeight - height;
+        width = newWidth;
+        height = newHeight;
+        return this;
+    }
+
+    /**
+     * Divide this rectangle into four equal ones.
+     *
+     * @return topLeft, topRight, bottomLeft, bottomRight
+     */
+    public EnhRectangle2D[] toQuadrants() {
+        double w2 = width / 2D;
+        double h2 = height / 2D;
+        return new EnhRectangle2D[]{
+            rect(x, y, w2, h2),
+            rect(x + w2, y, w2, h2),
+            rect(x, y + h2, w2, h2),
+            rect(x + w2, y + h2, w2, h2)
+        };
+    }
+
+    public EnhRectangle2D[] toSquareQuadrants() {
+        double size = min(width / 2, height / 2);
+        return new EnhRectangle2D[] {
+            rect(x, y, size, size),
+            rect(right() - size, y, size, size),
+            rect(x, bottom() - size, size, size),
+            rect(right() - size, bottom() - size, size, size)
+        };
+    }
+
+    public static EnhRectangle2D rect(double x, double y, double w, double h) {
+        return new EnhRectangle2D(x, y, w, h);
+    }
+
+    public EnhRectangle2D growHorizontal(double by) {
+        double halved = by / 2;
+        x -= halved;
+        width += by;
+        return this;
+    }
+
+    public EnhRectangle2D growVertical(double by) {
+        double halved = by / 2;
+        y -= halved;
+        width += by;
+        return this;
+    }
+
+    public EnhRectangle2D minSquare() {
+        width = height = min(width, height);
+        return this;
+    }
+
+    public EnhRectangle2D maxSquare() {
+        width = height = max(width, height);
+        return this;
+    }
+
+    public EnhRectangle2D centerOn(Rectangle2D rect) {
+        if (rect == this) {
+            return this;
+        }
+        return centerOn(rect.getCenterX(), rect.getCenterY());
+    }
+
+    public EnhRectangle2D centerOn(Point2D pt) {
+        return centerOn(pt.getX(), pt.getY());
+    }
+
+    public EnhRectangle2D centerOn(double cx, double cy) {
+        double myCx = getCenterX();
+        double myCy = getCenterY();
+        if (myCx != cx) {
+            x -= myCx - cx;
+        }
+        if (myCy != cy) {
+            y -= myCy - cy;
+        }
+        return this;
+    }
+
+    public EqPointDouble centerLeft() {
+        return new EqPointDouble(x, getCenterY());
+    }
+
+    public EqPointDouble centerRight() {
+        return new EqPointDouble(right(), getCenterY());
+    }
+
+    public EqLine diagonalTopLeft() {
+        return new EqLine(x, y, right(), bottom());
+    }
+
+    public EqLine diagonalBottomRight() {
+        return new EqLine(x, bottom(), right(), y);
     }
 
     public static EnhRectangle2D of(RectangularShape shape) {
@@ -404,7 +562,7 @@ public class EnhRectangle2D extends Rectangle2D.Double implements EnhancedShape,
     public Dimension2D getSize() {
         return size();
     }
-    
+
     public DimensionDouble size() {
         return new DimensionDouble(width, height);
     }

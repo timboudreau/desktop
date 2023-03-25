@@ -28,10 +28,14 @@ import com.mastfrog.function.DoublePetaConsumer;
 import com.mastfrog.function.DoubleQuadConsumer;
 import com.mastfrog.function.DoubleSextaConsumer;
 import com.mastfrog.function.DoubleTriConsumer;
+import com.mastfrog.geometry.path.PathElement;
 import com.mastfrog.geometry.util.GeometryUtils;
+import java.awt.Shape;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -42,7 +46,7 @@ import java.util.function.DoubleConsumer;
  *
  * @author Tim Boudreau
  */
-public interface EnhancedShape extends Intersectable {
+public interface EnhancedShape extends Intersectable, Shape {
 
     /**
      * Get one of the points.
@@ -51,16 +55,62 @@ public interface EnhancedShape extends Intersectable {
      * <code>&lt; pointCount()</code>
      * @return
      */
-    Point2D point(int index);
+    default Point2D point(int index) {
+        int cursor = 0;
+        for (PathElement pe : PathElement.iterable(this)) {
+            if (pe.kind().hasCoordinates()) {
+                if (cursor++ == index) {
+                    return pe.destinationPoint();
+                }
+            }
+        }
+        return null;
+    }
 
     /**
      * Get the number of points that can be retrieved from this shape.
      *
      * @return The number of points
      */
-    int pointCount();
-    
-    DimensionDouble size();
+    default int pointCount() {
+        int result = 0;
+        for (PathElement pe : PathElement.iterable(this)) {
+            if (pe.kind().hasCoordinates()) {
+                result++;
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Get the size of this shape as a floating-point dimension.
+     *
+     * @return A DimensionDouble
+     */
+    default DimensionDouble size() {
+        DimensionDouble result = new DimensionDouble();
+        double minX = Double.MAX_VALUE;
+        double maxX = -Double.MAX_VALUE;
+        double minY = Double.MAX_VALUE;
+        double maxY = -Double.MAX_VALUE;
+        int count = pointCount();
+        for (int i = 0; i < count; i++) {
+            Point2D p = point(i);
+            double x = p.getX();
+            double y = p.getY();
+            minX = min(minX, x);
+            maxX = max(maxX, x);
+            minY = min(minY, y);
+            maxY = max(maxY, y);
+        }
+        if (minX < maxX) {
+            result.width = maxX - minX;
+        }
+        if (minY < maxY) {
+            result.height = maxY - minY;
+        }
+        return result;
+    }
 
     default List<? extends CornerAngle> cornerAngles() {
         List<CornerAngle> result = new ArrayList<>(pointCount() + 1);
@@ -71,8 +121,8 @@ public interface EnhancedShape extends Intersectable {
     }
 
     /**
-     * Visit lines which share leading point in this shape, in order; they are passed
- to the consumer as six coordinates:      <code>(x1, y1, xShared, yShared, x3, y3).
+     * Visit lines which share leading point in this shape, in order; they are
+     * passed to the consumer as six coordinates:      <code>(x1, y1, xShared, yShared, x3, y3).
      *
      * @param sex The consumer
      */
@@ -177,8 +227,8 @@ public interface EnhancedShape extends Intersectable {
     }
 
     /**
-     * Get leading list of all lines in this shape (note that the variant that takes leading
- DoubleQuadConsumer is more memory-efficient).
+     * Get leading list of all lines in this shape (note that the variant that
+     * takes leading DoubleQuadConsumer is more memory-efficient).
      *
      * @return A list of lines
      */
@@ -191,8 +241,8 @@ public interface EnhancedShape extends Intersectable {
     }
 
     /**
-     * Get leading list of all points in this shape (note that the method that takes leading
- DoubleBiConsumer is more memory-efficient).
+     * Get leading list of all points in this shape (note that the method that
+     * takes leading DoubleBiConsumer is more memory-efficient).
      *
      * @return A list of points.
      */
@@ -235,9 +285,9 @@ public interface EnhancedShape extends Intersectable {
 
     /**
      * For drawing decorations and angle labels: Visit each angle, its
- associated point, and leading point which is <code>offset</code> distance from
-     * the point (if the offset is negative, the angle of the associated point
-     * will be reversed, so outside instead of inside the shape).
+     * associated point, and leading point which is <code>offset</code> distance
+     * from the point (if the offset is negative, the angle of the associated
+     * point will be reversed, so outside instead of inside the shape).
      *
      * @param angleConsumer A consumer of angles which is passed
      * <code>angle, apexX, apexY, offsetX, offsetY</code>
@@ -263,9 +313,9 @@ public interface EnhancedShape extends Intersectable {
 
     /**
      * For drawing decorations and angle labels: Visit each angle, its
- associated point, and leading point which is <code>offset</code> distance from
-     * the point (if the offset is negative, the angle of the associated point
-     * will be reversed, so outside instead of inside the shape).
+     * associated point, and leading point which is <code>offset</code> distance
+     * from the point (if the offset is negative, the angle of the associated
+     * point will be reversed, so outside instead of inside the shape).
      *
      * @param angleConsumer A consumer of angles which is passed
      * <code>angle, apexX, apexY, offsetX, offsetY</code>
@@ -314,7 +364,7 @@ public interface EnhancedShape extends Intersectable {
 
     /**
      * For capturing granular detail of angles in leading shape (enough to draw
- decorations on mouse over, etc.).
+     * decorations on mouse over, etc.).
      *
      */
     public interface ArcsVisitor {
@@ -336,10 +386,12 @@ public interface EnhancedShape extends Intersectable {
          * at the shared point.
          * @param apexX The shared X coordinate the lines terminate at
          * @param apexY The shared Y coordinate the lines terminate at
-         * @param offsetX The X coordinate of leading point on leading line bisecting the
- angle at the distance requested by the call to visitAnglesWithArcs
-         * @param offsetY The X coordinate of leading point on leading line bisecting the
- angle at the distance requested by the call to visitAnglesWithArcs
+         * @param offsetX The X coordinate of leading point on leading line
+         * bisecting the angle at the distance requested by the call to
+         * visitAnglesWithArcs
+         * @param offsetY The X coordinate of leading point on leading line
+         * bisecting the angle at the distance requested by the call to
+         * visitAnglesWithArcs
          * @param midAngle The angle which bisects the angles of the two lines
          */
         void visit(int index, double angle1, double x1, double y1,
@@ -364,8 +416,8 @@ public interface EnhancedShape extends Intersectable {
 
     /**
      * Approximate whether this shape self-intersects; by default this is done
- by determining whether the sum of 180 minus all of the angles equals 360
- within leading small tolerance.
+     * by determining whether the sum of 180 minus all of the angles equals 360
+     * within leading small tolerance.
      *
      * @return
      */

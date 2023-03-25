@@ -27,11 +27,13 @@ import com.mastfrog.function.DoubleBiConsumer;
 import com.mastfrog.function.DoubleBiPredicate;
 import com.mastfrog.function.DoubleQuadConsumer;
 import com.mastfrog.geometry.util.GeometryStrings;
+import static com.mastfrog.geometry.util.GeometryStrings.toDegreesString;
 import static com.mastfrog.geometry.util.GeometryUtils.toInt;
 import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Line2D;
+import java.awt.geom.Path2D;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
@@ -110,6 +112,7 @@ public final strictfp class Circle implements Shape, Sector {
         int hash = 7;
         hash = 29 * hash + (int) (Double.doubleToLongBits(this.centerX) ^ (Double.doubleToLongBits(this.centerX) >>> 32));
         hash = 29 * hash + (int) (Double.doubleToLongBits(this.centerY) ^ (Double.doubleToLongBits(this.centerY) >>> 32));
+        hash = 29 * hash + (int) (Double.doubleToLongBits(this.radius) ^ (Double.doubleToLongBits(this.radius) >>> 32));
         return hash;
     }
 
@@ -128,7 +131,8 @@ public final strictfp class Circle implements Shape, Sector {
         if (Double.doubleToLongBits(this.centerX) != Double.doubleToLongBits(other.centerX)) {
             return false;
         }
-        return Double.doubleToLongBits(this.centerY) == Double.doubleToLongBits(other.centerY);
+        return Double.doubleToLongBits(this.centerY) == Double.doubleToLongBits(other.centerY)
+                && Double.doubleToLongBits(this.radius) == Double.doubleToLongBits(other.radius);
     }
 
     public void setCenterAndRadius(double centerX, double centerY, double radius) {
@@ -272,7 +276,7 @@ public final strictfp class Circle implements Shape, Sector {
     }
      */
     /**
-     * Get a circle centered on the center of one quadrant of this one.
+     * Get a circle centered on the centerOn of one quadrant of this one.
      *
      * @param quadrant The quadrant
      * @return
@@ -286,7 +290,7 @@ public final strictfp class Circle implements Shape, Sector {
     @Override
     public boolean contains(double x, double y) {
         boolean result = distanceToCenter(x, y) <= radius;
-        if (factor != 1D) {
+        if (result && factor != 1D) {
             double usableDegrees = factor * 360;
             if (angleOf(x, y) > usableDegrees) {
                 return false;
@@ -492,8 +496,8 @@ public final strictfp class Circle implements Shape, Sector {
      * Get the angle in degrees of the second point on a circle centered on the
      * first point.
      *
-     * @param cx The center X coordinate
-     * @param cy The center Y coordinate
+     * @param cx The centerOn X coordinate
+     * @param cy The centerOn Y coordinate
      * @param tx The test X coordinate
      * @param ty The test Y coordinate
      * @return An angle in degrees, or 0 if both points are the same
@@ -574,11 +578,11 @@ public final strictfp class Circle implements Shape, Sector {
     }
 
     /**
-     * Get the position of an angle given a center point and radius.
+     * Get the position of an angle given a centerOn point and radius.
      *
      * @param angle An angle in degrees.
-     * @param cx The center x coordinate
-     * @param cy The center y coordinate
+     * @param cx The centerOn x coordinate
+     * @param cy The centerOn y coordinate
      * @param radius The radius
      * @param c A consumer for the result
      */
@@ -761,8 +765,8 @@ public final strictfp class Circle implements Shape, Sector {
     }
 
     @Override
-    public Rectangle2D getBounds2D() {
-        return new Rectangle2D.Double(centerX - radius, centerY - radius, radius * 2, radius * 2);
+    public EnhRectangle2D getBounds2D() {
+        return new EnhRectangle2D(centerX - radius, centerY - radius, radius * 2, radius * 2);
     }
 
     @Override
@@ -1262,7 +1266,7 @@ public final strictfp class Circle implements Shape, Sector {
         double yStep = dist[1] * step;
 
         // Increment each coordinate once so we move our tangent line one
-        // step toward the center, so we will get a non-null intersecting
+        // step toward the centerOn, so we will get a non-null intersecting
         // line
         line.x1 += xStep;
         line.y1 += yStep;
@@ -1297,7 +1301,6 @@ public final strictfp class Circle implements Shape, Sector {
     }
 
     public EqLine intersection(Line2D orig) {
-
         double bx = orig.getX2();
         double ax = orig.getX1();
         double by = orig.getY2();
@@ -1306,7 +1309,7 @@ public final strictfp class Circle implements Shape, Sector {
         double cy = centerY;
         double r = radius;
         // compute the euclidean distance between A and B
-        double LAB = Math.sqrt(Math.pow(bx - ax, 2) + Math.pow(by - ay, 2));
+        double LAB = EqLine.of(orig).length(); //Math.sqrt(Math.pow(bx - ax, 2) + Math.pow(by - ay, 2));
 
         // compute the direction vector D from A to B
         double Dx = (bx - ax) / LAB;
@@ -1314,7 +1317,7 @@ public final strictfp class Circle implements Shape, Sector {
 
         // the equation of the line AB is x = Dx*t + Ax, y = Dy*t + Ay with 0 <= t <= LAB.
         // compute the distance between the points A and E, where
-        // E is the point of AB closest the circle center (Cx, Cy)
+        // E is the point of AB closest the circle centerOn (Cx, Cy)
         double t = Dx * (cx - ax) + Dy * (cy - ay);
 
         // compute the coordinates of the point E
@@ -1345,4 +1348,85 @@ public final strictfp class Circle implements Shape, Sector {
         }
         return null;
     }
+
+    /**
+     * Convert this circle to a Path2D, specifying the number of quadratic
+     * points to use (for very large or detailed circles, you may want more than
+     * the default used by Circle's PathIterator).
+     *
+     * @param steps The number of steps
+     * @return A Path2D representing this circle, clockwise
+     */
+    public Path2D toPath(int steps) {
+        return toPath(steps, true);
+    }
+    
+    public Path2D toPath(int steps, boolean clockwise) {
+        Path2D.Double result = new Path2D.Double(PathIterator.WIND_NON_ZERO, steps + 2);
+        double start = clockwise ? 0 : 360;
+        double end = clockwise ? 360 : 0;
+        appendTo(start, end, steps, result, true);
+        return result;
+    }
+
+    /**
+     * Append this circle or a portion of it to a Path2D, specifiying the number of
+     * quadratic curve steps to use.
+     *
+     * @param startDeg The starting degrees (to go from, say, 270 to 90 degreess,
+     * pass -90.
+     * @param stopDeg The end degrees.
+     * @param steps The number of quadratic points to use (less one)
+     * @param path The path to modify
+     * @param move If true, the first point should use path.moveTo().
+     * @return The point at which the appended points <i>started</i>
+     */
+    public EqPointDouble appendTo(double startDeg, double stopDeg,
+            int steps, Path2D path, boolean move) {
+        if (this.radius <= 0.0 || this.radius == -0.0) {
+            return center();
+        }
+        double totalDegrees = Math.abs(stopDeg - startDeg);
+        double step = totalDegrees / (double) steps;
+        boolean clockwise = stopDeg > startDeg;
+        if (!clockwise) {
+            step *= -1;
+            totalDegrees *= -1;
+        }
+
+        double deg = startDeg;
+        double endDeg = startDeg + totalDegrees;
+        EqPointDouble result = null;
+        for (int i = 0; clockwise ? deg <= endDeg + 1 : deg >= endDeg - 1; i++) {
+            double[] pos = this.positionOf(deg);
+            if (i == 0) {
+                result = new EqPointDouble(pos[0], pos[1]);
+            }
+            if (i == 0 && move) {
+                path.moveTo(pos[0], pos[1]);
+            } else {
+                EqLine tangentPrev = this.tangent(deg - step);
+                EqLine tangentCurr = this.tangent(deg);
+                // the intersection of the tangents gives us a nice circular
+                // curve.
+                EqPointDouble isect = tangentPrev.intersectionPoint(tangentCurr);
+                if (isect == null) {
+                    EqLine ll = tangentCurr.copy();
+                    ll.setLength(ll.length() * 20);
+                    ll.swap();
+                    ll.setLength(ll.length() * 20);
+                    ll.swap();
+                    isect = ll.intersectionPoint(tangentCurr);
+                    tangentCurr = ll;
+                }
+                if (isect == null) {
+                    throw new IllegalStateException("Cannot intersect at deg " + toDegreesString(deg));
+                }
+                path.quadTo(isect.x, isect.y, pos[0], pos[1]);
+            }
+            deg += step;
+        }
+        return result;
+    }
+
 }

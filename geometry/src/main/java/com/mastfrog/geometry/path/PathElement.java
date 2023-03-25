@@ -33,7 +33,6 @@ import java.awt.geom.Path2D;
 import java.awt.geom.PathIterator;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 import java.util.function.Supplier;
 
 /**
@@ -83,6 +82,14 @@ public interface PathElement extends Iterable<EqPointDouble> {
         pts[offset] = x;
         pts[offset + 1] = y;
         return new SimplePathElement(type(), pts);
+    }
+
+    default PathElement withKind(PathElementKind kind) {
+        if (kind == PathElementKind.CLOSE) {
+            return new SimplePathElement(PathElementKind.CLOSE.intValue());
+        }
+        double[] pts = points();
+        return new SimplePathElement(kind.intValue(), pts);
     }
 
     /**
@@ -342,6 +349,46 @@ public interface PathElement extends Iterable<EqPointDouble> {
                 break;
             default:
                 throw new AssertionError(k);
+        }
+    }
+
+    public static PathIterator forceWindingRule(int windingRule, PathIterator it) {
+        return new WindingRuleModifier(windingRule, it);
+    }
+
+    static class WindingRuleModifier implements PathIterator {
+
+        private final int windingRule;
+        private final PathIterator orig;
+
+        public WindingRuleModifier(int windingRule, PathIterator orig) {
+            this.windingRule = windingRule;
+            this.orig = orig;
+        }
+
+        @Override
+        public int getWindingRule() {
+            return windingRule;
+        }
+
+        @Override
+        public boolean isDone() {
+            return orig.isDone();
+        }
+
+        @Override
+        public void next() {
+            orig.next();
+        }
+
+        @Override
+        public int currentSegment(float[] coords) {
+            return orig.currentSegment(coords);
+        }
+
+        @Override
+        public int currentSegment(double[] coords) {
+            return orig.currentSegment(coords);
         }
     }
 }

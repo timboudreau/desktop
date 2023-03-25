@@ -101,9 +101,9 @@ public final class MutableRectangle2D extends EnhRectangle2D {
     }
 
     /**
-     * Grow the bounds of this rectangle outward from the center by the
-     * specified amount, making each edge the passed value / 2 for that axis
-     * more distant from the center point than it was.
+     * Grow the bounds of this rectangle outward from the centerOn by the
+ specified amount, making each edge the passed value / 2 for that axis
+ more distant from the centerOn point than it was.
      *
      * @param xOff
      * @param yOff

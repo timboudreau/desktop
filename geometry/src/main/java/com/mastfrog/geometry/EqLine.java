@@ -184,7 +184,7 @@ public final class EqLine extends Line2D.Double implements Intersectable {
 
     /**
      * Create a new line with the same length as this one, rotated by the passed
-     * angle in degrees around its center point.
+     * angle in degrees around its centerOn point.
      *
      * @param angle
      * @return
@@ -227,12 +227,83 @@ public final class EqLine extends Line2D.Double implements Intersectable {
     }
 
     /**
+     * Returns two lines parallel to this one, each half the passed distance from
+     * this one, and parallel to it.  Does not alter the state of this line.
+     *
+     * @param distance A distance
+     * @return an array containing two new EqLine instances
+     */
+    public EqLine[] toParallelLines(double distance) {
+        EqLine a = copy();
+        EqLine b = copy();
+        a.shiftPerpendicular(distance / 2D);
+        b.swap();
+        b.shiftPerpendicular(distance / 2D);
+        b.swap();
+        // XXX ensure vertical/horizontal order?
+        return new EqLine[] { a, b };
+    }
+
+    /**
      * Set of this line, changing the coordinates of the second point.
      *
      * @param newLength The new length
      */
     public void setLength(double newLength) {
         setLength(newLength, false);
+    }
+
+    /**
+     * Create a copy of this line with lengthen(add) called on it.
+     *
+     * @param add The amount to add
+     * @return A new line
+     */
+    public EqLine lengthenedBy(double add) {
+        EqLine result = copy();
+        return result.lengthenBy(add);
+    }
+
+    /**
+     * Create a copy of this line with lengthenByFactor(add) called on it.
+     *
+     * @param add The amount to add
+     * @return A new line
+     */
+    public EqLine lengthenedByFactor(double add) {
+        EqLine result = copy();
+        return result.lengthenByFactor(add);
+    }
+
+    /**
+     * Change the length of this line, adding the specified amount, half at each
+     * end.
+     *
+     * @param add The amount to add to the length
+     * @return this
+     */
+    public EqLine lengthenBy(double add) {
+        double old = length();
+        double halved = add / 2D;
+        setLength(old + halved, false);
+        old = length();
+        setLength(old + halved, true);
+        return this;
+    }
+
+    /**
+     * Lengthen this line by the passed multiplier, applying equal amounts of
+     * additional length to both ends of this line.
+     *
+     * @param factor The factor to apply
+     * @return this
+     */
+    public EqLine lengthenByFactor(double factor) {
+        double origLength = length();
+        double newLength = origLength * factor;
+        double amt = newLength - origLength;
+        lengthenBy(amt);
+        return this;
     }
 
     /**
