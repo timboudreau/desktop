@@ -120,7 +120,7 @@ public class TextWrapLabelUI extends LabelUI {
         if (txt.length() < wrapTrigger) {
             words = new String[]{txt};
         } else {
-            words = txt.split("\\s");
+            words = txt.split("\\s+");
             if (words.length < 2) {
                 words = new String[] { txt };
             }

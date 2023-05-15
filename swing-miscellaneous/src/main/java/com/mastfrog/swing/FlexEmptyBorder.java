@@ -82,6 +82,7 @@ public final class FlexEmptyBorder implements Border {
     }
 
     private static boolean debug;
+
     public static void setDebugLayout(boolean debug) {
         FlexEmptyBorder.debug = debug;
     }
@@ -121,6 +122,10 @@ public final class FlexEmptyBorder implements Border {
         if (sides.isEmpty() || c.getParent() instanceof JPanel
                 && ((JPanel) c.getParent()).getBorder() instanceof FlexEmptyBorder) {
             return (Insets) EMPTY.clone();
+        }
+        if (!c.isDisplayable()) {
+            // Otherwise we will get an NPE getting fontmetrics
+            return new Insets(0, 0, 0, 0);
         }
         FontMetrics fm = c.getFontMetrics(c.getFont());
         int charWidth = fm.stringWidth("O");
