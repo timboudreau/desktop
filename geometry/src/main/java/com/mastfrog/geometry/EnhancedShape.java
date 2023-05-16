@@ -24,7 +24,7 @@
 package com.mastfrog.geometry;
 
 import com.mastfrog.function.DoubleBiConsumer;
-import com.mastfrog.function.DoublePetaConsumer;
+import com.mastfrog.function.DoublePentaConsumer;
 import com.mastfrog.function.DoubleQuadConsumer;
 import com.mastfrog.function.DoubleSextaConsumer;
 import com.mastfrog.function.DoubleTriConsumer;
@@ -293,7 +293,7 @@ public interface EnhancedShape extends Intersectable, Shape {
      * <code>angle, apexX, apexY, offsetX, offsetY</code>
      * @param offset The desired distance from the apex to the offset point
      */
-    default void visitAnglesWithOffsets(DoublePetaConsumer angleConsumer, double offset) {
+    default void visitAnglesWithOffsets(DoublePentaConsumer angleConsumer, double offset) {
         Circle circ = new Circle(0, 0, 1);
         visitAdjoiningLines((x1, y1, xShared, yShared, x3, y3) -> {
             circ.setCenter(xShared, yShared);
